@@ -7,11 +7,6 @@ const client = new pg.Client(
 );
 
 // dropping/creating the table
-/**
- * customer { id, name }
- * restaurant { id, name }
- * reservation { id, date, party_count, restaurant_id, customer_id }
- */
 async function createTables() {
   const SQL = `
     DROP TABLE IF EXISTS reservations;
@@ -40,4 +35,71 @@ async function createTables() {
   await client.query(SQL);
 }
 
-module.exports = { client, createTables };
+async function createCustomer(name) {
+  const SQL = `
+    INSERT INTO customers(id, name)
+    VALUES ($1, $2)
+    RETURNING *
+  `;
+  const response = await client.query(SQL, [uuid.v4(), name]);
+  return response.rows[0];
+}
+
+async function createRestaurant(name) {
+  const SQL = `
+    INSERT INTO restaurants(id, name)
+    VALUES ($1, $2)
+    RETURNING *
+  `;
+  const response = await client.query(SQL, [uuid.v4(), name]);
+  return response.rows[0];
+}
+
+async function fetchCustomers() {
+  const SQL = `SELECT * FROM customers`;
+  const dbResponse = await client.query(SQL);
+  return dbResponse.rows;
+}
+
+async function fetchRestaurants() {
+  const SQL = `SELECT * FROM restaurants`;
+  const dbResponse = await client.query(SQL);
+  return dbResponse.rows;
+}
+
+async function createReservation({
+  date,
+  party_count,
+  restaurant_id,
+  customer_id,
+}) {
+  const SQL = `
+    INSERT INTO reservations(id, date, party_count, restaurant_id, customer_id)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING * 
+  `;
+  const response = await client.query(SQL, [
+    uuid.v4(),
+    date,
+    party_count,
+    restaurant_id,
+    customer_id,
+  ]);
+  return response.rows[0];
+}
+
+async function destroyReservation(id, customer_id) {
+  const SQL = `DELETE FROM reservations WHERE id=$1 AND customer_id=$2`;
+  await client.query(SQL, [id, customer_id]);
+}
+
+module.exports = {
+  client,
+  createTables,
+  createCustomer,
+  createRestaurant,
+  fetchCustomers,
+  fetchRestaurants,
+  createReservation,
+  destroyReservation,
+};

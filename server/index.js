@@ -1,4 +1,10 @@
-const { client } = require("./db");
+const {
+  client,
+  fetchCustomers,
+  fetchRestaurants,
+  createReservation,
+  destroyReservation,
+} = require("./db");
 
 const express = require("express");
 const morgan = require("morgan");
